@@ -14,11 +14,13 @@ export default function Messaging() {
               {name:"Payment Reminder", key:"reminder", body:"Reminder: Payment pending for {{plate}} → {{magic_link}}"}
             ].map(t => (
               <div key={t.key} className="glass rounded-xl p-4 border border-white/10">
-                <div className="text-sm font-semibold">{t.name}</div>
-                <textarea className="input mt-2 h-24" defaultValue={t.body}></textarea>
-                <div className="mt-2 text-xs text-white/60">Variables: <code>{{'{{magic_link}} {{plate}} {{ticket}} {{name}}'}}</code></div>
-                <div className="mt-3"><GlassButton>Save</GlassButton></div>
-              </div>
+  <div className="text-sm font-semibold">{t.name}</div>
+  <textarea className="input mt-2 h-24" defaultValue={t.body}></textarea>
+  <div className="mt-2 text-xs text-white/60">
+    Variables: <code>{'{{magic_link}} {{plate}} {{ticket}} {{name}}'}</code>
+  </div>
+  <div className="mt-3"><GlassButton>Save</GlassButton></div>
+</div>
             ))}
           </div>
         </GlassCard>
