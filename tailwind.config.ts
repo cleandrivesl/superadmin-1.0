@@ -19,7 +19,8 @@ const config: Config = {
         glass: "var(--glass)"
       },
       backgroundImage: {
-        "grid": "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0)"
+        "grid": "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0)",
+        "nebula": "radial-gradient(1000px 600px at -10% -10%, rgba(139,92,246,0.25), transparent 40%), radial-gradient(800px 600px at 120% 0%, rgba(88,28,135,0.25), transparent 40%)"
       },
       borderRadius: { xl: "var(--radius)" },
       boxShadow: { ring: "var(--ring)", glow: "0 10px 40px rgba(139,92,246,.25)" }

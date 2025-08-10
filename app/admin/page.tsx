@@ -6,10 +6,10 @@ export default function Admin() {
   return (
     <AppShellTop active="/admin">
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Jobs Today" value="42" icon={<Activity size={16}/>} />
-        <StatCard label="In Progress" value="11" icon={<Clock size={16}/>} />
-        <StatCard label="Ready" value="7" icon={<CheckCircle2 size={16}/>} />
-        <StatCard label="Revenue (LKR)" value="128,400" icon={<Wallet size={16}/>} />
+        <StatCard label="Jobs Today" value="42" icon={<Activity size={16}/>} spark={[5,7,6,8,10,9,11,13,10,12]} />
+        <StatCard label="In Progress" value="11" icon={<Clock size={16}/>} spark={[2,3,4,6,5,7,6,8,7,9]} />
+        <StatCard label="Ready" value="7" icon={<CheckCircle2 size={16}/>} spark={[1,2,3,2,4,5,7,6,7,8]} />
+        <StatCard label="Revenue (LKR)" value="128,400" icon={<Wallet size={16}/>} spark={[20,18,22,24,26,25,28,30,29,34]} />
       </div>
 
       <div className="mt-6 grid gap-4 grid-cols-1 xl:grid-cols-3">

@@ -1,13 +1,30 @@
 import AppShellTop from "@/components/AppShellTop";
 import { GlassButton, GlassCard, StatusPill, StageProgress } from "@/components/ui";
 import { Plus, Send, Pencil, Trash2 } from "lucide-react";
+import { getServiceClient } from "@/lib/supabaseClient";
+import { revalidatePath } from "next/cache";
 
-export default function Jobs() {
-  const rows = [
-    {plate:"CAB-1234", stage:"washing", progress:45, eta:"4:40 PM", total:"LKR 3,200"},
-    {plate:"KAB-8891", stage:"drying", progress:70, eta:"5:15 PM", total:"LKR 2,400"},
-    {plate:"CAA-6610", stage:"ready", progress:100, eta:"Ready", total:"LKR 1,900"},
-  ];
+type JobRow = {
+  id: string;
+  plate: string;
+  stage: "queued"|"washing"|"drying"|"ready"|"paid";
+  progress: number;
+  eta: string | null;
+  total_lkr: number | null;
+};
+
+async function getJobs(): Promise<JobRow[]> {
+  const sb = getServiceClient();
+  const { data } = await sb
+    .from("jobs")
+    .select("id, plate, stage, progress, eta, total_lkr")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return (data ?? []) as JobRow[];
+}
+
+export default async function Jobs() {
+  const rows = await getJobs();
 
   return (
     <AppShellTop active="/admin/jobs">
@@ -16,12 +33,10 @@ export default function Jobs() {
           <div className="flex flex-wrap items-center gap-3 justify-between">
             <div className="text-lg font-semibold">Jobs</div>
             <div className="flex gap-2">
-              <input placeholder="Search plate or ticket..." className="input w-64" />
-              <select className="input">
-                <option value="">All Stages</option>
-                <option>Queued</option><option>Washing</option><option>Drying</option><option>Ready</option><option>Paid</option>
-              </select>
-              <GlassButton className="flex items-center gap-2"><Plus size={14}/> New</GlassButton>
+              <form action={searchJobs} className="flex gap-2">
+                <input name="q" placeholder="Search plate..." className="input w-64" />
+                <GlassButton type="submit">Search</GlassButton>
+              </form>
             </div>
           </div>
 
@@ -39,16 +54,33 @@ export default function Jobs() {
               </thead>
               <tbody className="divide-y divide-white/10">
                 {rows.map((r)=> (
-                  <tr key={r.plate} className="align-middle">
+                  <tr key={r.id} className="align-middle">
                     <td className="py-3 pr-4 font-semibold">{r.plate}</td>
                     <td className="py-3 pr-4"><StatusPill label={r.stage} tone={r.stage==="ready"?"good":(r.stage==="drying"?"warn":"info")} /></td>
-                    <td className="py-3 pr-4 w-[220px]"><StageProgress value={r.progress}/></td>
-                    <td className="py-3 pr-4 text-white/80">{r.eta}</td>
-                    <td className="py-3 pr-4 font-semibold">{r.total}</td>
+                    <td className="py-3 pr-4 w-[220px]"><StageProgress value={r.progress || 0}/></td>
+                    <td className="py-3 pr-4 text-white/80">{r.eta ? new Date(r.eta).toLocaleString("en-LK") : "—"}</td>
+                    <td className="py-3 pr-4 font-semibold">{typeof r.total_lkr === "number" ? `LKR ${r.total_lkr.toLocaleString()}` : "—"}</td>
                     <td className="py-3 pr-4 text-right space-x-2">
-                      <GlassButton className="px-3 py-1.5 text-xs"><Send size={12}/> Link</GlassButton>
-                      <GlassButton className="px-3 py-1.5 text-xs"><Pencil size={12}/> Edit</GlassButton>
-                      <GlassButton className="px-3 py-1.5 text-xs"><Trash2 size={12}/> Del</GlassButton>
+                      <form action={issueLink}>
+                        <input type="hidden" name="job_id" value={r.id} />
+                        <GlassButton className="px-3 py-1.5 text-xs"><Send size={12}/> Link</GlassButton>
+                      </form>
+                      <form action={quickStage}>
+                        <input type="hidden" name="id" value={r.id} />
+                        <select name="stage" className="input inline-block w-auto text-xs align-middle">
+                          <option value="queued">queued</option>
+                          <option value="washing">washing</option>
+                          <option value="drying">drying</option>
+                          <option value="ready">ready</option>
+                          <option value="paid">paid</option>
+                        </select>
+                        <input type="number" min="0" max="100" name="progress" defaultValue={r.progress || 0} className="input inline-block w-20 ml-2 text-xs"/>
+                        <GlassButton className="px-3 py-1.5 text-xs ml-2"><Pencil size={12}/> Update</GlassButton>
+                      </form>
+                      <form action={deleteJob} className="inline-block ml-2">
+                        <input type="hidden" name="id" value={r.id} />
+                        <GlassButton className="px-3 py-1.5 text-xs"><Trash2 size={12}/> Del</GlassButton>
+                      </form>
                     </td>
                   </tr>
                 ))}
@@ -58,49 +90,100 @@ export default function Jobs() {
         </GlassCard>
 
         <GlassCard>
-          <div className="text-lg font-semibold">Create / Edit Job</div>
-          <div className="mt-4 grid gap-3">
-            <div>
-              <div className="label">Plate</div>
-              <input className="input" placeholder="e.g., CAB-1234" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="label">Stage</div>
-                <select className="input"><option>Queued</option><option>Washing</option><option>Drying</option><option>Ready</option><option>Paid</option></select>
-              </div>
-              <div>
-                <div className="label">Progress</div>
-                <input className="input" type="number" min="0" max="100" placeholder="0-100" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="label">ETA</div>
-                <input className="input" type="datetime-local" />
-              </div>
-              <div>
-                <div className="label">Total (LKR)</div>
-                <input className="input" type="number" placeholder="0" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="label">Branch</div>
-                <select className="input"><option>Main Branch</option></select>
-              </div>
-              <div>
-                <div className="label">Package</div>
-                <select className="input"><option>Premium Wash + Vacuum</option></select>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-2">
-              <GlassButton>Save</GlassButton>
-              <GlassButton>Send Magic Link</GlassButton>
-            </div>
-          </div>
+          <div className="text-lg font-semibold">Create Job</div>
+          <CreateJobForm />
         </GlassCard>
       </div>
     </AppShellTop>
   );
+}
+
+function CreateJobForm() {
+  return (
+    <form action={createJob} className="mt-4 grid gap-3">
+      <div>
+        <div className="label">Plate</div>
+        <input name="plate" className="input" placeholder="CAB-1234" required />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="label">Stage</div>
+          <select name="stage" className="input">
+            <option>queued</option><option>washing</option><option>drying</option><option>ready</option><option>paid</option>
+          </select>
+        </div>
+        <div>
+          <div className="label">Progress</div>
+          <input name="progress" className="input" type="number" min="0" max="100" defaultValue={0}/>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="label">ETA</div>
+          <input name="eta" className="input" type="datetime-local"/>
+        </div>
+        <div>
+          <div className="label">Total (LKR)</div>
+          <input name="total_lkr" className="input" type="number" defaultValue={0}/>
+        </div>
+      </div>
+      <div className="flex gap-2 mt-2">
+        <GlassButton type="submit">Save</GlassButton>
+      </div>
+    </form>
+  );
+}
+
+// ---------- SERVER ACTIONS ----------
+export async function searchJobs(formData: FormData) {
+  "use server";
+  // Placeholder: add filters/URL params later
+  revalidatePath("/admin/jobs");
+}
+
+export async function createJob(formData: FormData) {
+  "use server";
+  const sb = getServiceClient();
+  const payload = {
+    plate: String(formData.get("plate") || "").toUpperCase(),
+    stage: String(formData.get("stage") || "queued"),
+    progress: Number(formData.get("progress") || 0),
+    eta: formData.get("eta") ? new Date(String(formData.get("eta"))).toISOString() : null,
+    total_lkr: Number(formData.get("total_lkr") || 0)
+  };
+  const { error } = await sb.from("jobs").insert(payload);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/jobs");
+}
+
+export async function quickStage(formData: FormData) {
+  "use server";
+  const sb = getServiceClient();
+  const id = String(formData.get("id"));
+  const stage = String(formData.get("stage"));
+  const progress = Number(formData.get("progress"));
+  const { error } = await sb.from("jobs").update({ stage, progress }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/jobs");
+}
+
+export async function deleteJob(formData: FormData) {
+  "use server";
+  const sb = getServiceClient();
+  const id = String(formData.get("id"));
+  const { error } = await sb.from("jobs").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/jobs");
+}
+
+export async function issueLink(formData: FormData) {
+  "use server";
+  const job_id = String(formData.get("job_id"));
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/token/issue`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ job_id })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  revalidatePath("/admin/jobs");
 }

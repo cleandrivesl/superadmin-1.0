@@ -3,14 +3,14 @@
   --brand-600: #7C3AED;
   --brand-700: #6D28D9;
   --accent: #22C55E;
-  --bg: #0B0F1A;
-  --card: rgba(20, 24, 37, 0.75);
-  --glass: rgba(17, 13, 28, 0.35);
-  --glass-strong: rgba(17, 13, 28, 0.55);
+  --bg: #070912;
+  --card: rgba(12, 14, 24, 0.75);
+  --glass: rgba(12, 10, 22, 0.40);
+  --glass-strong: rgba(12, 10, 22, 0.62);
   --muted: #9AA4B2;
   --text: #E7E9EE;
   --white: #FFFFFF;
-  --radius: 14px;
+  --radius: 16px;
   --ring: 0 0 0 3px rgba(139,92,246,.35);
 }
 @media (prefers-color-scheme: light) {

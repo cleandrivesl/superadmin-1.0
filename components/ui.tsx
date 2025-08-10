@@ -34,18 +34,39 @@ export function StatusPill({ label, tone="default" }:{label:string, tone?: "defa
 }
 
 export function GlassCard({ children, className="" }:{children: ReactNode, className?:string}) {
-  return <div className={`glass rounded-2xl p-5 ${className}`}>{children}</div>;
+  return <div className={`glass rounded-2xl p-5 tile ${className}`}>{children}</div>;
 }
 
-export function StatCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+export function StatCard({ label, value, icon, spark }: { label: string; value: string; icon: React.ReactNode; spark?: number[] }) {
   return (
-    <div className="glass rounded-2xl p-5 border border-white/10 relative overflow-hidden">
+    <div className="glass rounded-2xl p-5 border border-white/10 relative overflow-hidden tile">
       <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-brand/25 to-brand-700/20 blur-2xl" />
       <div className="flex items-center gap-3">
         <div className="p-2.5 rounded-xl bg-brand/15 border border-white/10">{icon}</div>
         <div className="text-sm text-muted">{label}</div>
       </div>
       <div className="mt-3 text-3xl font-extrabold tracking-tight">{value}</div>
+      {spark && <Sparks data={spark} />}
     </div>
+  );
+}
+
+export function Sparks({ data }:{ data:number[] }) {
+  const max = Math.max(...data, 1);
+  const h = 36, w = 160;
+  const pts = data.map((v, i) => {
+    const x = (i/(data.length-1))*w;
+    const y = h - (v/max)*h;
+    return `${x},${y}`;
+  }).join(" ");
+  return (
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="mt-2">
+      <polyline points={pts} fill="none" stroke="url(#g)" strokeWidth="2"/>
+      <defs>
+        <linearGradient id="g" x1="0" x2="1">
+          <stop offset="0" stopColor="#8B5CF6"/><stop offset="1" stopColor="#6D28D9"/>
+        </linearGradient>
+      </defs>
+    </svg>
   );
 }

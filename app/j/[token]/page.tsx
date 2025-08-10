@@ -1,5 +1,6 @@
 import { StageProgress, StatusPill, GlassButton, GlassCard } from "@/components/ui";
 import { Brand } from "@/components/Brand";
+import { getServiceClient } from "@/lib/supabaseClient";
 
 type Job = {
   plate: string;
@@ -11,17 +12,22 @@ type Job = {
 };
 
 async function getJob(token: string): Promise<Job | null> {
-  if (token === "demo-token") {
-    return {
-      plate: "CAB-1234",
-      stage: "washing",
-      progress: 45,
-      eta: new Date(Date.now()+60*60*1000).toLocaleString(),
-      packageName: "Premium Wash + Vacuum",
-      total: "LKR 3,200",
-    };
-  }
-  return null;
+  const sb = getServiceClient();
+  const { data, error } = await sb
+    .from("v_job_from_token")
+    .select("token, plate, stage, progress, eta, total_lkr")
+    .eq("token", token)
+    .single();
+  if (error || !data) return null;
+
+  return {
+    plate: data.plate as string,
+    stage: (data.stage as any) ?? "queued",
+    progress: (data.progress as number) ?? 0,
+    eta: data.eta ? new Date(String(data.eta)).toLocaleString("en-LK") : "TBA",
+    packageName: "",
+    total: `LKR ${Number(data.total_lkr ?? 0).toLocaleString()}`
+  };
 }
 
 export default async function Page({ params }: { params: { token: string } }) {
@@ -54,7 +60,7 @@ export default async function Page({ params }: { params: { token: string } }) {
 
             <GlassCard>
               <div className="font-semibold mb-2">Package</div>
-              <div className="text-sm">{job.packageName}</div>
+              <div className="text-sm">{job.packageName || "—"}</div>
               <div className="mt-3 text-sm text-white/80">Total</div>
               <div className="text-2xl font-extrabold">{job.total}</div>
               <div className="mt-4 flex gap-3">

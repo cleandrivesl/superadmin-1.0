@@ -22,7 +22,7 @@ export default function Settings() {
             <div><div className="label">WhatsApp Phone Number ID</div><input className="input" placeholder=""/></div>
             <div><div className="label">SMS (Twilio) SID</div><input className="input" placeholder=""/></div>
             <div><div className="label">SMS (Twilio) Token</div><input className="input" placeholder="••••••"/></div>
-            <div><div className="label">Payment Provider</div><select className="input"><option>PayHere</option><option>Stripe</option></select></div>
+            <div className="label">Payment Provider</div><select className="input"><option>PayHere</option><option>Stripe</option></select>
             <div className="mt-2"><GlassButton>Save</GlassButton></div>
           </div>
         </GlassCard>

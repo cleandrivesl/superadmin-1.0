@@ -13,7 +13,7 @@ const nav = [
 
 export default function AppShellTop({ children, active="/admin" }: { children: React.ReactNode; active?: string }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-nebula">
       <header className="sticky top-0 z-40 px-4">
         <div className="glass-strong rounded-2xl border border-white/10 px-4 h-20 flex items-center justify-between">
           <Brand />
